@@ -1,44 +1,70 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
+import { createPost } from '../Services/Api';
 
 function Post() {
 
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
-  const navigate = useNavigate();
+  const [message, setMessage] = useState('');
 
-  const handlePostSubmit = (e) => {
+  const handlePostSubmit = async (e) => {
 
     e.preventDefault();
     
-    // if (newPost.trim() !== '') {
+    if (newPost.trim() !== '') {
 
-    //   const post = {
-    //     id: posts.length + 1,
-    //     content: newPost,
-    //     likes: 0,
-    //     comments: 0,
-    //     shares: 0,
-    //     user: 'CurrentUser',
-    //   };
+      const postData = {
+        userId: 1,
+        content: newPost,
+      };
 
-    //   setPosts([post, ...posts]);
-    //   setNewPost('');
+      try {
+
+        const response = await createPost(postData);
+
+        if (response.success) {
+
+          setMessage('Post created successfully.');
+          setPosts([postData, ...posts]);
+          setNewPost('');
+
+        } else {
+          setMessage('Error creating post.');
+        }
+
+      } catch (error) {
+
+        setMessage('Error creating post.');
+        console.error(error);
+
+      }
     
-    // }
-
-    navigate('/home');
+    }
   
   };
 
-  const handleLike = (id) => {
+  useEffect(() => {
 
-    setPosts(posts.map(post => 
-      post.id === id ? { ...post, likes: post.likes + 1 } : post
-    ));
+    if (message) {
 
-  };
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+
+    }
+
+  }, [message]);
+
+  // const handleLike = (id) => {
+
+  //   setPosts(posts.map(post => 
+  //     post.id === id ? { ...post, likes: post.likes + 1 } : post
+  //   ));
+
+  // };
 
   return (
 
@@ -53,6 +79,7 @@ function Post() {
           <h2 className="text-2xl font-bold mb-4 text-center">Create a Post</h2>
 
           <form onSubmit={handlePostSubmit}>
+
             <textarea
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
@@ -66,37 +93,20 @@ function Post() {
             >
               Post
             </button>
+
           </form>
+
+          {message && (
+            <div className="mt-4 text-green-600">
+              {message}
+            </div>
+          )}
 
           <div className="text-center mt-6">
             <Link to="/home" className="text-blue-600 hover:underline">
               Go to Homepage
             </Link>
           </div>
-
-        </div>
-
-        <div className="w-full max-w-2xl">
-
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white p-6 rounded shadow-md mb-4">
-              <div className="flex items-center mb-4">
-                <Link to={`/profile/${post.user}`}>
-                  <FaUserCircle className="text-3xl text-gray-600 mr-4" />
-                </Link>
-                <h3 className="text-lg font-semibold">{post.user}</h3>
-              </div>
-              <p className="text-gray-800">{post.content}</p>
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => handleLike(post.id)}
-                  className="flex items-center bg-blue-600 text-white py-1 px-4 rounded-md hover:bg-blue-700"
-                >
-                  <FaThumbsUp className="mr-2" /> Like ({post.likes})
-                </button>
-              </div>
-            </div>
-          ))}
 
         </div>
 

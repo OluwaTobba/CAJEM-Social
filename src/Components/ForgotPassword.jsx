@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { forgotPassword } from '../Services/Api';
 
 function ForgotPassword() {
 
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
 
-    const handlePasswordReset = (e) => {
+    const handlePasswordReset = async (e) => {
+
         e.preventDefault();
-        // Add your password reset logic here
-        console.log('Password reset link sent to:', email);
-        setMessage('If an account with that email exists, a password reset link has been sent.');
+        
+        try {
+
+            const response = await forgotPassword({ email });
+            setMessage(response.message);
+
+        } catch (error) {
+
+            console.error('Password reset failed:', error);
+
+        }
+
     };
 
     useEffect(() => {
@@ -59,7 +70,7 @@ function ForgotPassword() {
                 </form>
 
                 {message && (
-                    <div className="mt-4 text-green-600">
+                    <div className="mt-4 text-green-600 text-center">
                         {message}
                     </div>
                 )}

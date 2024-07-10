@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaUserCircle, FaEye, FaEyeSlash } from 'react-icons/fa';
 import Navbar from './Navbar';
+import { updateProfile, fetchUserProfile } from '../Services/Api';
 
 function ProfileUpdate() {
-    
+
     const { username } = useParams();
-    const [name, setName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [newUsername, setNewUsername] = useState(username);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -15,11 +17,63 @@ function ProfileUpdate() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const navigate = useNavigate();
 
-    const handleProfileUpdate = (e) => {
+    useEffect(() => {
+
+        const fetchProfileData = async () => {
+
+            try {
+
+                const response = await fetchUserProfile();
+
+                if (response.success) {
+
+                    setFirstName(response.first_name);
+                    setLastName(response.last_name);
+                    setNewUsername(response.username);
+
+                    if (response.profile_picture) {
+                        setProfilePicture(response.profile_picture);
+                    }
+                    
+                } else {
+                    alert(response.message);
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+
+        };
+
+        fetchProfileData();
+
+    }, []);
+
+    const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        // Add your profile update logic here
-        console.log({ name, newUsername, oldPassword, newPassword, profilePicture });
-        navigate(`/profile/${newUsername}`);
+        
+        const formData = new FormData();
+        formData.append('username', newUsername);
+        formData.append('old_password', oldPassword);
+        formData.append('new_password', newPassword);
+
+        if (profilePicture) {
+            formData.append('profile_picture', profilePicture);
+        }
+
+        try {
+
+            const response = await updateProfile(formData);
+
+            if (response.success) {
+                navigate(`/profile/${newUsername}`);
+            } else {
+                alert(response.message);
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleProfilePictureChange = (e) => {
@@ -45,7 +99,7 @@ function ProfileUpdate() {
                                 {profilePicture ? (
                                 <img
                                     src={URL.createObjectURL(profilePicture)}
-                                    alt="Profile"
+                                    alt="Profile Image"
                                     className="w-28 h-28 rounded-full mx-auto"
                                 />
                                 ) : (
@@ -62,13 +116,12 @@ function ProfileUpdate() {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-gray-700">Update Name</label>
+                            <label className="block text-gray-700">Full Name</label>
                             <input
                                 type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                placeholder="Enter your name"
+                                value={`${firstName} ${lastName}`}
+                                readOnly
+                                className="w-full px-4 py-2 border rounded-md bg-gray-200 cursor-not-allowed"
                             />
                         </div>
 
@@ -94,7 +147,7 @@ function ProfileUpdate() {
                             />
                             <button
                                 type="button"
-                                className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+                                className="mt-6 absolute inset-y-0 right-3 flex items-center text-gray-600"
                                 onClick={() => setShowOldPassword(!showOldPassword)}
                             >
                                 {showOldPassword ? <FaEyeSlash /> : <FaEye />}
@@ -113,7 +166,7 @@ function ProfileUpdate() {
                             />
                             <button
                                 type="button"
-                                className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+                                className="mt-6 absolute inset-y-0 right-3 flex items-center text-gray-600"
                                 onClick={() => setShowNewPassword(!showNewPassword)}
                             >
                                 {showNewPassword ? <FaEyeSlash /> : <FaEye />}

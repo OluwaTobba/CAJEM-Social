@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
+import { logoutUser } from '../Services/Api';
 
 function Navbar() {
 
@@ -11,11 +12,15 @@ function Navbar() {
         setDropdownOpen(!dropdownOpen);
     };
     
-    const handleLogout = (e) => {
-        e.preventDefault();
-        // Add your logout logic here
-        navigate('/login');
-        console.log('Logout');
+    const handleLogout = async () => {
+
+        const response = await logoutUser();
+
+        if (response.success) {
+            navigate('/login');
+        } else {
+            console.error('Logout failed:', response.message);
+        }
     };
 
     return (
